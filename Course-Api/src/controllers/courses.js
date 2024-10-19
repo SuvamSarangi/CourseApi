@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { title } from 'process';
 
 
-const filePath = './cources.json';
+const filePath = './courses.json';
 let courses = [];
 //Add cource
 
