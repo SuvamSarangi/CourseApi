@@ -1,6 +1,6 @@
 
 import express from 'express';
-import courceRoute from './routers/courceRoutes.js';
+import courceRoute from './routers/courseRoutes.js';
 
 const app = express();
 app.use(express.json());
