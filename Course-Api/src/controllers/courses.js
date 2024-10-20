@@ -9,7 +9,7 @@ let courses = [];
 
 const addCourse = (req, res) => {
     // Read the existing data from the file
-   
+
     if (fs.existsSync(filePath)) {
         const data = fs.readFileSync(filePath, 'utf-8');
         if (data) {
@@ -24,7 +24,11 @@ const addCourse = (req, res) => {
         description: req.body.description,
         duration: req.body.duration
     }
-    
+    //check for duplicate entry
+    const checkDuplicate = courses.find((course) => course.title === newCourse.title)
+    if (checkDuplicate) {
+        return res.status(400).json({ message: "Course already exists" });
+    }
 
     //Add the new course to the courses array
 
@@ -67,44 +71,98 @@ const getAllCources = (req, res) => {
 
 //get cource by id
 
-const getCourceById = (req,res) =>{
-const courceId = parseInt(req.params.id);
+const getCourceById = (req, res) => {
+    const courceId = parseInt(req.params.id);
 
-//check file is exist or not if exist parse data into an array
-if(fs.existsSync(filePath)){
-    const data = fs.readFileSync(filePath,'utf-8') ;
-   courses = JSON.parse(data);
-}
+    //check file is exist or not if exist parse data into an array
+    if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf-8');
+        courses = JSON.parse(data);
+    }
 
-// find the course by its id
-const course = courses.find(course => course.id === courceId);
+    // find the course by its id
+    const course = courses.find(course => course.id === courceId);
 
-if(course){
-    res.status(200).json(course);
-}else{
-    res.status(404).json({ message: 'Course not found' });
-}
+    if (course) {
+        res.status(200).json(course);
+    } else {
+        res.status(404).json({ message: 'Course not found' });
+    }
 
 }
 
 //Update Course
 
-const updateCourse = (req,res) =>{
+const updateCourse = (req, res) => {
     // Extract the Course ID from the URL parameter.
-        const courceId = parseInt(req.params.id);
-    // Read the Courses Data from the JSON file and Parse the JSON data into a JavaScript object.
-    
-    // Search for the Course with the given ID in the parsed data.
 
-    // validate courece input
-    // Update the Course with the new data.
-    // Write the Updated Data back to the JSON file
+    const courseId = parseInt(req.params.id);
+
+    // Read the Courses Data from the JSON file and Parse the JSON data into a JavaScript object.
+
+    const data = fs.readFileSync(filePath, 'utf-8');
+    courses = JSON.parse(data);
+
+    try {
+        // Search for the Course with the given ID in the parsed data.
+        const courseIndex = courses.findIndex((course) => course.id === courseId)
+        if (courseIndex == -1) {
+            return res.status(404).send('Course not found');
+        }
+
+        // validate courece input
+
+        // Update the Course with the new data.
+        courses[courseIndex] = { ...courses[courseIndex], ...req.body };
+        // Write the Updated Data back to the JSON file
+        fs.writeFileSync(filePath, JSON.stringify(courses, null, 2));
+        res.status(200).json(courses[courseIndex]);
+
+    } catch (error) {
+        res.status(404).json({ message: 'Error updating course', error })
+    }
+
+
+}
+
+//Delete course
+
+const deleteCorse = (req, res) => {
+
+    // Extract the Course ID from the URL parameter.
+    const courseId = parseInt(req.params.id);
+
+    try {
+        //read the data from file and convert to javascript object
+
+        const data = fs.readFileSync(filePath, 'utf-8');
+        courses = JSON.parse(data);
+
+        // Filter out the course to be deleted
+
+        const course = courses.filter((c) => c.id !== courseId);
+
+        if (course.length === courses.length) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Write the updated courses back to the file
+
+        fs.writeFileSync(filePath, JSON.stringify(course, null, 2));
+
+        // Send a 204 No Content response to indicate successful deletion
+
+        res.status(200).json({ message: 'Course deleted successfully' });
+    } catch (error) {
+        console.error('Error reading or writing the file:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+
+    }
+
 
 }
 
 
 
-
-
-export { getAllCources, addCourse, getCourceById };
+export { getAllCources, addCourse, getCourceById, updateCourse, deleteCorse };
 
